@@ -9,7 +9,7 @@ export const PipelineToolbar = () => {
         <div style={{ 
             padding: `${theme.spacing.lg} ${theme.spacing.xl}`, 
             backgroundColor: theme.colors.surface,
-            borderBottom: `1px solid ${theme.colors.border}`,
+            flex: 1,
         }}>
             <div style={{ 
                 display: 'flex', 
@@ -28,7 +28,10 @@ export const PipelineToolbar = () => {
                 </h2>
                 <span style={{
                     fontSize: '12px',
-                    color: theme.colors.textMuted
+                    color: theme.colors.textMuted,
+                    position: 'absolute',
+                    left: '50%',
+                    transform: 'translateX(-50%)',
                 }}>
                     Drag nodes to canvas
                 </span>

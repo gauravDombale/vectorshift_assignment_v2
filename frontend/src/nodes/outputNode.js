@@ -64,6 +64,11 @@ export const OutputNode = ({ id, data }) => {
           id: `${id}-value`,
           position: Position.Left,
           name: 'value'
+        },
+        {
+          id: `${id}-result`,
+          position: Position.Right,
+          name: 'result'
         }
       ]}
       content={content}

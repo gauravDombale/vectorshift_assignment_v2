@@ -50,7 +50,7 @@ export const SubmitButton = () => {
             display: 'flex', 
             alignItems: 'center', 
             justifyContent: 'flex-end',
-            padding: `${theme.spacing.md} ${theme.spacing.lg}`,
+            padding: `${theme.spacing.lg} ${theme.spacing.xl}`,
             backgroundColor: theme.colors.surface,
         }}>
             <button 
