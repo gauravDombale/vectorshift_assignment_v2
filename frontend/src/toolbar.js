@@ -2,36 +2,38 @@
 
 import { DraggableNode } from './draggableNode';
 import { theme } from './styles/theme';
+import { SubmitButton } from './submit';
 
 export const PipelineToolbar = () => {
 
     return (
         <div style={{ 
-            padding: `${theme.spacing.lg} ${theme.spacing.xl}`, 
+            padding: `${theme.spacing.md} ${theme.spacing.lg}`, 
             backgroundColor: theme.colors.surface,
-            flex: 1,
+            width: '100%',
         }}>
             <div style={{ 
                 display: 'flex', 
                 alignItems: 'center',
                 justifyContent: 'space-between',
-                marginBottom: theme.spacing.md
+                marginBottom: theme.spacing.sm,
+                flexWrap: 'wrap',
+                gap: theme.spacing.xs,
             }}>
                 <h2 style={{ 
                     margin: 0, 
-                    fontSize: '15px', 
+                    fontSize: 'clamp(12px, 2vw, 15px)', 
                     fontWeight: '600',
                     color: theme.colors.text,
-                    fontFamily: theme.typography.fontFamily
+                    fontFamily: theme.typography.fontFamily,
+                    whiteSpace: 'nowrap',
                 }}>
                     Node Palette
                 </h2>
-                <span style={{
-                    fontSize: '12px',
+                <span className="drag-hint" style={{
+                    fontSize: 'clamp(10px, 1.5vw, 12px)',
                     color: theme.colors.textMuted,
-                    position: 'absolute',
-                    left: '50%',
-                    transform: 'translateX(-50%)',
+                    display: 'none',
                 }}>
                     Drag nodes to canvas
                 </span>
@@ -39,7 +41,9 @@ export const PipelineToolbar = () => {
             <div style={{ 
                 display: 'flex', 
                 flexWrap: 'wrap', 
-                gap: theme.spacing.sm 
+                gap: theme.spacing.sm,
+                justifyContent: 'flex-start',
+                alignItems: 'center',
             }}>
                 <DraggableNode type='customInput' label='Input' />
                 <DraggableNode type='llm' label='LLM' />
@@ -50,6 +54,11 @@ export const PipelineToolbar = () => {
                 <DraggableNode type='filter' label='Filter' />
                 <DraggableNode type='merge' label='Merge' />
                 <DraggableNode type='split' label='Split' />
+                
+                {/* Spacer to push submit button to the right */}
+                <div style={{ flex: 1 }} />
+                
+                <SubmitButton />
             </div>
         </div>
     );

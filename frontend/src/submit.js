@@ -46,22 +46,15 @@ export const SubmitButton = () => {
     };
 
     return (
-        <div style={{
-            display: 'flex', 
-            alignItems: 'center', 
-            justifyContent: 'flex-end',
-            padding: `${theme.spacing.lg} ${theme.spacing.xl}`,
-            backgroundColor: theme.colors.surface,
-        }}>
             <button 
                 type="button"
                 onClick={handleSubmit}
                 style={{
                     display: 'flex',
                     alignItems: 'center',
-                    gap: '8px',
-                    padding: '12px 24px',
-                    fontSize: '14px',
+                    gap: 'clamp(4px, 1vw, 8px)',
+                    padding: 'clamp(8px, 1.5vw, 12px) clamp(14px, 2.5vw, 24px)',
+                    fontSize: 'clamp(12px, 1.5vw, 14px)',
                     fontWeight: '600',
                     fontFamily: theme.typography.fontFamily,
                     color: theme.colors.textLight,
@@ -71,6 +64,7 @@ export const SubmitButton = () => {
                     cursor: 'pointer',
                     transition: `all ${theme.transitions.fast}`,
                     boxShadow: theme.shadows.sm,
+                    whiteSpace: 'nowrap',
                 }}
                 onMouseEnter={(e) => {
                     e.target.style.backgroundColor = theme.colors.primaryDark;
@@ -83,9 +77,8 @@ export const SubmitButton = () => {
                     e.target.style.transform = 'translateY(0)';
                 }}
             >
-                <Send size={16} />
-                Submit Pipeline
+                <Send size={14} style={{ flexShrink: 0 }} />
+                <span className="submit-text">Submit Pipeline</span>
             </button>
-        </div>
     );
 }

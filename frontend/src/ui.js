@@ -99,7 +99,7 @@ export const PipelineUI = () => {
 
     return (
         <>
-        <div ref={reactFlowWrapper} style={{width: '100%', height: 'calc(100vh - 120px)', backgroundColor: '#f8fafc'}}>
+        <div ref={reactFlowWrapper} style={{width: '100%', height: 'calc(100vh - 120px)', height: 'calc(100dvh - 120px)', minHeight: '400px', backgroundColor: '#f8fafc'}}>
             <ReactFlow
                 nodes={nodes}
                 edges={edges}
@@ -124,6 +124,7 @@ export const PipelineUI = () => {
             >
                 <Background color="#94a3b8" gap={gridSize} variant="dots" size={1.5} />
                 <Controls 
+                  className="react-flow-controls"
                   style={{ 
                     backgroundColor: '#ffffff', 
                     border: '1px solid #e2e8f0',
@@ -132,6 +133,7 @@ export const PipelineUI = () => {
                   }} 
                 />
                 <MiniMap 
+                  className="react-flow-minimap"
                   style={{ 
                     backgroundColor: '#ffffff', 
                     border: '1px solid #e2e8f0',

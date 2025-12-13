@@ -32,17 +32,18 @@ export const DraggableNode = ({ type, label }) => {
   
     const baseStyle = {
       cursor: 'grab', 
-      minWidth: '90px', 
-      padding: '10px 16px',
+      minWidth: 'clamp(70px, 10vw, 90px)', 
+      padding: 'clamp(6px, 1.5vw, 10px) clamp(10px, 2vw, 16px)',
       display: 'flex', 
       alignItems: 'center', 
-      gap: '8px',
+      gap: 'clamp(4px, 1vw, 8px)',
       borderRadius: theme.borderRadius.md,
       backgroundColor: theme.colors.surface,
       justifyContent: 'center', 
       transition: `all ${theme.transitions.fast}`,
       boxShadow: theme.shadows.sm,
       border: `1px solid ${theme.colors.border}`,
+      flexShrink: 0,
     };
 
     const hoverStyle = {
@@ -66,11 +67,12 @@ export const DraggableNode = ({ type, label }) => {
         }} 
         draggable
       >
-          {Icon && <Icon size={16} color={theme.colors.primary} />}
+          {Icon && <Icon size={14} color={theme.colors.primary} style={{ flexShrink: 0 }} />}
           <span style={{ 
             color: theme.colors.text,
             fontWeight: '500',
-            fontSize: '13px'
+            fontSize: 'clamp(11px, 1.5vw, 13px)',
+            whiteSpace: 'nowrap',
           }}>
             {label}
           </span>
