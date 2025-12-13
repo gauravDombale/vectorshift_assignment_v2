@@ -555,35 +555,54 @@ export const PipelineUI = () => {
                       centerY: r.top - wrapperRect.top + r.height / 2,
                     };
 
-                    // vertical align checks (left, center, right)
-                    const vChecks = [
-                      { a: moved.left, b: other.left },
-                      { a: moved.centerX, b: other.centerX },
-                      { a: moved.right, b: other.right },
-                    ];
-                    vChecks.forEach((c) => {
-                      if (Math.abs(c.a - c.b) <= threshold) {
-                        const x = Math.round((c.a + c.b) / 2);
+                    // Prefer center (middle) alignment when possible, then fall back to edge align
+                    // Vertical center priority (centerX)
+                    if (Math.abs(moved.centerX - other.centerX) <= threshold) {
+                      const x = Math.round((moved.centerX + other.centerX) / 2);
+                      const from = Math.min(moved.top, other.top) - 8;
+                      const to = Math.max(moved.bottom, other.bottom) + 8;
+                      guides.push({ orientation: 'vertical', x, from, to, priority: 'center' });
+                    } else {
+                      // left/right edges
+                      const leftDiff = Math.abs(moved.left - other.left);
+                      if (leftDiff <= threshold) {
+                        const x = Math.round((moved.left + other.left) / 2);
                         const from = Math.min(moved.top, other.top) - 8;
                         const to = Math.max(moved.bottom, other.bottom) + 8;
                         guides.push({ orientation: 'vertical', x, from, to });
                       }
-                    });
+                      const rightDiff = Math.abs(moved.right - other.right);
+                      if (rightDiff <= threshold) {
+                        const x = Math.round((moved.right + other.right) / 2);
+                        const from = Math.min(moved.top, other.top) - 8;
+                        const to = Math.max(moved.bottom, other.bottom) + 8;
+                        guides.push({ orientation: 'vertical', x, from, to });
+                      }
+                    }
 
-                    // horizontal align checks (top, center, bottom)
-                    const hChecks = [
-                      { a: moved.top, b: other.top },
-                      { a: moved.centerY, b: other.centerY },
-                      { a: moved.bottom, b: other.bottom },
-                    ];
-                    hChecks.forEach((c) => {
-                      if (Math.abs(c.a - c.b) <= threshold) {
-                        const y = Math.round((c.a + c.b) / 2);
+                    // Horizontal center priority (centerY)
+                    if (Math.abs(moved.centerY - other.centerY) <= threshold) {
+                      const y = Math.round((moved.centerY + other.centerY) / 2);
+                      const from = Math.min(moved.left, other.left) - 8;
+                      const to = Math.max(moved.right, other.right) + 8;
+                      guides.push({ orientation: 'horizontal', y, from, to, priority: 'center' });
+                    } else {
+                      // top/bottom edges
+                      const topDiff = Math.abs(moved.top - other.top);
+                      if (topDiff <= threshold) {
+                        const y = Math.round((moved.top + other.top) / 2);
                         const from = Math.min(moved.left, other.left) - 8;
                         const to = Math.max(moved.right, other.right) + 8;
                         guides.push({ orientation: 'horizontal', y, from, to });
                       }
-                    });
+                      const bottomDiff = Math.abs(moved.bottom - other.bottom);
+                      if (bottomDiff <= threshold) {
+                        const y = Math.round((moved.bottom + other.bottom) / 2);
+                        const from = Math.min(moved.left, other.left) - 8;
+                        const to = Math.max(moved.right, other.right) + 8;
+                        guides.push({ orientation: 'horizontal', y, from, to });
+                      }
+                    }
                   });
 
                   setAlignGuides(guides);
