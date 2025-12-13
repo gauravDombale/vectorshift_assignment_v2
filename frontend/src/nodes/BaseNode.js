@@ -39,6 +39,7 @@ export const BaseNode = ({
   
   const updateNodeField = useStore((state) => state.updateNodeField);
   const updateNodeDimensions = useStore((state) => state.updateNodeDimensions);
+  const removeNode = useStore((state) => state.removeNode);
 
   // Update editedTitle when data.customName changes
   useEffect(() => {
@@ -234,6 +235,15 @@ export const BaseNode = ({
           ) : (
             <span style={{ cursor: 'text' }} role="button" aria-label={`Node: ${displayTitle}`}>{displayTitle}</span>
           )}
+          <button
+            className="nodrag nopan"
+            title="Close node"
+            aria-label="Close node"
+            onClick={(ev) => { ev.stopPropagation(); ev.preventDefault(); removeNode(id); }}
+            style={{ marginLeft: 'auto', background: 'transparent', border: 'none', color: 'inherit', cursor: 'pointer' }}
+          >
+            ✕
+          </button>
         </div>
       )}
       

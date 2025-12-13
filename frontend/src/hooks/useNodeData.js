@@ -8,9 +8,10 @@ export const useNodeData = (id, fieldName, initialValue, delay = 300) => {
   const timerRef = useRef(null);
 
   // Keep local state in sync when initial changes (e.g., on load)
+  // Initialize local state when node id or field name changes (avoid overwriting while typing)
   useEffect(() => {
     setValue(initialValue);
-  }, [initialValue]);
+  }, [id, fieldName]);
 
   // Debounce writes to global store
   useEffect(() => {

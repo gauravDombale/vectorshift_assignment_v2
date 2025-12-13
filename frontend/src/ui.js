@@ -309,6 +309,10 @@ export const PipelineUI = () => {
     const copiedRef = useRef(null);
     useEffect(() => {
       const onKeyDown = (e) => {
+        // Ignore shortcuts when user is typing in inputs, textareas, or contenteditable elements
+        const active = document.activeElement;
+        if (active && (active.tagName === 'INPUT' || active.tagName === 'TEXTAREA' || active.isContentEditable)) return;
+
         const cmd = e.ctrlKey || e.metaKey;
 
         // Copy (Ctrl/Cmd+C)
