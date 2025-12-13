@@ -50,8 +50,9 @@ export const SubmitButton = () => {
             display: 'flex', 
             alignItems: 'center', 
             justifyContent: 'flex-end',
-            padding: `${theme.spacing.md} ${theme.spacing.lg}`,
-            backgroundColor: theme.colors.surface,
+            paddingTop: `calc(${theme.spacing.lg} + ${theme.spacing.md})`,
+            paddingRight: theme.spacing.xl,
+            backgroundColor: 'transparent',
         }}>
             <button 
                 type="button"

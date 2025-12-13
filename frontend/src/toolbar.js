@@ -7,9 +7,7 @@ export const PipelineToolbar = () => {
 
     return (
         <div style={{ 
-            padding: `${theme.spacing.lg} ${theme.spacing.xl}`, 
-            backgroundColor: theme.colors.surface,
-            borderBottom: `1px solid ${theme.colors.border}`,
+            padding: `0`, 
         }}>
             <div style={{ 
                 display: 'flex', 

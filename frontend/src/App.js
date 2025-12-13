@@ -1,6 +1,7 @@
 import { PipelineToolbar } from './toolbar';
 import { PipelineUI } from './ui';
 import { SubmitButton } from './submit';
+import { theme } from './styles/theme';
 
 function App() {
   return (
@@ -9,7 +10,9 @@ function App() {
         display: 'flex', 
         alignItems: 'center', 
         justifyContent: 'space-between',
-        borderBottom: '1px solid #e2e8f0'
+        borderBottom: `1px solid ${theme.colors.border}`,
+        backgroundColor: theme.colors.surface,
+        padding: `${theme.spacing.lg} ${theme.spacing.xl}`,
       }}>
         <PipelineToolbar />
         <SubmitButton />
