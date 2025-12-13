@@ -1,9 +1,18 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from typing import List, Dict, Any
+import logging
 
-app = FastAPI()
+# Configure logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
+app = FastAPI(
+    title="VectorShift Pipeline API",
+    description="API for parsing and validating pipeline configurations",
+    version="1.0.0"
+)
 
 # Add CORS middleware to allow frontend to connect
 app.add_middleware(
@@ -33,7 +42,13 @@ class PipelineRequest(BaseModel):
 
 @app.get('/')
 def read_root():
-    return {'Ping': 'Pong'}
+    """Health check endpoint."""
+    return {'status': 'healthy', 'message': 'Pipeline API is running'}
+
+@app.get('/health')
+def health_check():
+    """Health check endpoint for monitoring."""
+    return {'status': 'healthy'}
 
 def is_dag(nodes: List[Node], edges: List[Edge]) -> bool:
     """
@@ -80,13 +95,27 @@ def is_dag(nodes: List[Node], edges: List[Edge]) -> bool:
 def parse_pipeline(pipeline: PipelineRequest):
     """
     Parse the pipeline and return statistics.
-    """
-    num_nodes = len(pipeline.nodes)
-    num_edges = len(pipeline.edges)
-    is_dag_result = is_dag(pipeline.nodes, pipeline.edges)
     
-    return {
-        'num_nodes': num_nodes,
-        'num_edges': num_edges,
-        'is_dag': is_dag_result
-    }
+    Args:
+        pipeline: The pipeline configuration containing nodes and edges
+        
+    Returns:
+        dict: Pipeline statistics including node count, edge count, and DAG status
+    """
+    try:
+        logger.info(f"Parsing pipeline with {len(pipeline.nodes)} nodes and {len(pipeline.edges)} edges")
+        
+        num_nodes = len(pipeline.nodes)
+        num_edges = len(pipeline.edges)
+        is_dag_result = is_dag(pipeline.nodes, pipeline.edges)
+        
+        logger.info(f"Pipeline analysis complete: is_dag={is_dag_result}")
+        
+        return {
+            'num_nodes': num_nodes,
+            'num_edges': num_edges,
+            'is_dag': is_dag_result
+        }
+    except Exception as e:
+        logger.error(f"Error parsing pipeline: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Error parsing pipeline: {str(e)}")
