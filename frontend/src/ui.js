@@ -54,6 +54,7 @@ export const PipelineUI = () => {
       onEdgesChange,
       onConnect
     } = useStore(useShallow(selector));
+    const removeNode = useStore((s) => s.removeNode);
 
     const [edgeButtons, setEdgeButtons] = useState([]);
 
@@ -241,6 +242,149 @@ export const PipelineUI = () => {
 
       return () => clearTimeout(id);
     }, [edges, nodes, reactFlowInstance]);
+      // Function to compute midpoint positions for all existing edges
+      const computeEdgeButtons = useCallback(() => {
+        if (!reactFlowWrapper.current) return [];
+        const wrapperRect = reactFlowWrapper.current.getBoundingClientRect();
+        const edgeGroups = reactFlowWrapper.current.querySelectorAll('.react-flow__edge');
+        const buttons = [];
+
+        edgeGroups.forEach((g) => {
+          try {
+            const path = g.querySelector('.react-flow__edge-path');
+            if (!path) return;
+            let edgeId = g.getAttribute('data-id') || g.getAttribute('id') || g.dataset?.id;
+            // Normalize/resolve against known edges
+            if (edgeId) {
+              const exact = edges.find((e) => e.id === edgeId || (edgeId && edgeId.includes(e.id)) || (e.id && e.id.includes(edgeId)));
+              if (exact) edgeId = exact.id;
+            } else {
+              const possible = edges.find((e) => {
+                const matches = Array.from(g.attributes || []).some(attr => (attr.value || '').includes(e.id));
+                return matches;
+              });
+              if (possible) edgeId = possible.id;
+            }
+
+            const rect = path.getBoundingClientRect();
+            const left = rect.left + rect.width / 2 - wrapperRect.left;
+            const top = rect.top + rect.height / 2 - wrapperRect.top;
+            if (edgeId) buttons.push({ id: edgeId, left, top });
+          } catch (err) {
+            // ignore individual failures
+          }
+        });
+
+        return buttons;
+      }, [edges]);
+
+      // Initial compute and update
+      useEffect(() => {
+        const buttons = computeEdgeButtons();
+        setEdgeButtons(buttons);
+        // also schedule a short-delayed recompute to handle async SVG render
+        const id = setTimeout(() => setEdgeButtons(computeEdgeButtons()), 120);
+        return () => clearTimeout(id);
+      }, [computeEdgeButtons, nodes, reactFlowInstance]);
+
+      // Keep edge button positions in sync with panning/zooming by polling periodically
+      useEffect(() => {
+        let raf = null;
+        let last = 0;
+        const tick = (t) => {
+          // throttle to ~60ms
+          if (t - last > 60) {
+            const buttons = computeEdgeButtons();
+            setEdgeButtons(buttons);
+            last = t;
+          }
+          raf = requestAnimationFrame(tick);
+        };
+
+        raf = requestAnimationFrame(tick);
+        return () => cancelAnimationFrame(raf);
+      }, [computeEdgeButtons]);
+
+    // Keyboard shortcuts: copy/cut/paste/delete/duplicate
+    const copiedRef = useRef(null);
+    useEffect(() => {
+      const onKeyDown = (e) => {
+        const cmd = e.ctrlKey || e.metaKey;
+
+        // Copy (Ctrl/Cmd+C)
+        if (cmd && e.key.toLowerCase() === 'c') {
+          if (!reactFlowInstance) return;
+          const selNodes = reactFlowInstance.getNodes().filter(n => n.selected);
+          if (selNodes.length > 0) {
+            // store deep clone of nodes and inter-edges
+            const selIds = selNodes.map(n => n.id);
+            const nodesClone = selNodes.map(n => ({ ...n, data: { ...n.data } }));
+            const relatedEdges = edges.filter(ed => selIds.includes(ed.source) && selIds.includes(ed.target));
+            copiedRef.current = { nodes: nodesClone, edges: relatedEdges };
+            e.preventDefault();
+          }
+        }
+
+        // Paste (Ctrl/Cmd+V)
+        if (cmd && e.key.toLowerCase() === 'v') {
+          if (!copiedRef.current) return;
+          const { nodes: copiedNodes, edges: copiedEdges } = copiedRef.current;
+          const map = {};
+          const offset = 40;
+          copiedNodes.forEach((n, idx) => {
+            const newId = getNodeID(n.type || n.data?.nodeType || 'custom');
+            map[n.id] = newId;
+            const newNode = {
+              ...n,
+              id: newId,
+              position: { x: (n.position?.x || 0) + offset * (idx + 1), y: (n.position?.y || 0) + offset * (idx + 1) },
+            };
+            addNode(newNode);
+          });
+          // recreate edges among copied nodes
+          copiedEdges.forEach((ed) => {
+            const conn = { source: map[ed.source], target: map[ed.target], sourceHandle: ed.sourceHandle, targetHandle: ed.targetHandle };
+            onConnect(conn);
+          });
+          e.preventDefault();
+        }
+
+        // Delete selected (Delete or Backspace)
+        if (e.key === 'Delete' || e.key === 'Backspace') {
+          if (!reactFlowInstance) return;
+          const selNodes = reactFlowInstance.getNodes().filter(n => n.selected);
+          const selEdges = reactFlowInstance.getEdges().filter(ed => ed.selected);
+          selNodes.forEach(n => removeNode(n.id));
+          selEdges.forEach(ed => {
+            // use store removeEdge
+            useStore.getState().removeEdge(ed.id);
+          });
+          e.preventDefault();
+        }
+
+        // Duplicate (Ctrl/Cmd+D)
+        if (cmd && e.key.toLowerCase() === 'd') {
+          if (!reactFlowInstance) return;
+          const selNodes = reactFlowInstance.getNodes().filter(n => n.selected);
+          if (selNodes.length === 0) return;
+          const map = {};
+          selNodes.forEach((n, idx) => {
+            const newId = getNodeID(n.type || n.data?.nodeType || 'custom');
+            map[n.id] = newId;
+            const newNode = { ...n, id: newId, position: { x: n.position.x + 20, y: n.position.y + 20 } };
+            addNode(newNode);
+          });
+          // duplicate internal edges
+          const selIds = selNodes.map(n => n.id);
+          const relatedEdges = edges.filter(ed => selIds.includes(ed.source) && selIds.includes(ed.target));
+          relatedEdges.forEach(ed => onConnect({ source: map[ed.source], target: map[ed.target], sourceHandle: ed.sourceHandle, targetHandle: ed.targetHandle }));
+          e.preventDefault();
+        }
+      };
+
+      window.addEventListener('keydown', onKeyDown);
+      return () => window.removeEventListener('keydown', onKeyDown);
+    }, [reactFlowInstance, edges, getNodeID, addNode, onConnect, removeNode]);
 
     return (
         <>
