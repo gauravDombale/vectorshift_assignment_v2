@@ -1,0 +1,92 @@
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+from pydantic import BaseModel
+from typing import List, Dict, Any
+
+app = FastAPI()
+
+# Add CORS middleware to allow frontend to connect
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:3000", "http://localhost:3001"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+class Edge(BaseModel):
+    id: str
+    source: str
+    target: str
+    sourceHandle: str = None
+    targetHandle: str = None
+
+class Node(BaseModel):
+    id: str
+    type: str
+    position: Dict[str, float]
+    data: Dict[str, Any] = {}
+
+class PipelineRequest(BaseModel):
+    nodes: List[Node]
+    edges: List[Edge]
+
+@app.get('/')
+def read_root():
+    return {'Ping': 'Pong'}
+
+def is_dag(nodes: List[Node], edges: List[Edge]) -> bool:
+    """
+    Check if the graph formed by nodes and edges is a Directed Acyclic Graph (DAG).
+    Uses topological sort algorithm.
+    """
+    if not nodes or not edges:
+        return True
+    
+    # Build adjacency list and in-degree count
+    node_ids = {node.id for node in nodes}
+    adjacency = {node_id: [] for node_id in node_ids}
+    in_degree = {node_id: 0 for node_id in node_ids}
+    
+    for edge in edges:
+        source = edge.source
+        target = edge.target
+        
+        # Only process edges where both nodes exist
+        if source in node_ids and target in node_ids:
+            adjacency[source].append(target)
+            in_degree[target] = in_degree.get(target, 0) + 1
+    
+    # Find all nodes with in-degree 0
+    queue = [node_id for node_id in node_ids if in_degree[node_id] == 0]
+    processed_count = 0
+    
+    # Process nodes with no incoming edges
+    while queue:
+        current = queue.pop(0)
+        processed_count += 1
+        
+        # Reduce in-degree of neighbors
+        for neighbor in adjacency[current]:
+            in_degree[neighbor] -= 1
+            if in_degree[neighbor] == 0:
+                queue.append(neighbor)
+    
+    # If we processed all nodes, it's a DAG (no cycles)
+    # If there are cycles, some nodes will have in-degree > 0
+    return processed_count == len(node_ids)
+
+@app.post('/pipelines/parse')
+def parse_pipeline(pipeline: PipelineRequest):
+    """
+    Parse the pipeline and return statistics.
+    """
+    num_nodes = len(pipeline.nodes)
+    num_edges = len(pipeline.edges)
+    is_dag_result = is_dag(pipeline.nodes, pipeline.edges)
+    
+    return {
+        'num_nodes': num_nodes,
+        'num_edges': num_edges,
+        'is_dag': is_dag_result
+    }
