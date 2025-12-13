@@ -43,13 +43,14 @@ export const ConditionalNode = ({ id, data }) => {
           id: `${id}-true`,
           position: Position.Right,
           name: 'true',
+          // position handles symmetrically around center (true above, false below)
           style: { top: '40%' }
         },
         {
           id: `${id}-false`,
           position: Position.Right,
           name: 'false',
-          style: { top: '70%' }
+          style: { top: '60%' }
         }
       ]}
       content={content}

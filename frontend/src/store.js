@@ -47,7 +47,19 @@ export const useStore = create((set, get) => ({
       const snap = { nodes: JSON.parse(JSON.stringify(get().nodes)), edges: JSON.parse(JSON.stringify(get().edges)) };
       const h = [...get()._history, snap].slice(-get()._historyMax);
       set({ _history: h, _redo: [] });
-      set({ edges: addEdge({...connection, type: 'smoothstep', animated: true, markerEnd: {type: MarkerType.Arrow, height: '20px', width: '20px'}}, get().edges), });
+      // determine edge color based on source handle (true/false cases)
+      let strokeColor = '#5046e5';
+      try {
+        const sh = (connection && connection.sourceHandle) ? String(connection.sourceHandle).toLowerCase() : '';
+        if (sh.includes('true')) {
+          strokeColor = '#10b981'; // green for true case
+        } else if (sh.includes('false')) {
+          strokeColor = '#ef4444'; // red for false case
+        }
+      } catch (err) {
+        // fallback to default
+      }
+      set({ edges: addEdge({ ...connection, type: 'smoothstep', animated: true, style: { stroke: strokeColor, strokeWidth: 2.5 }, markerEnd: { type: MarkerType.Arrow, height: '20px', width: '20px' } }, get().edges), });
     },
     updateNodeField: (nodeId, fieldName, fieldValue) => {
       set({
