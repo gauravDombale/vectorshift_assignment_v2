@@ -315,6 +315,29 @@ export const PipelineUI = () => {
 
         const cmd = e.ctrlKey || e.metaKey;
 
+        // Undo (Ctrl/Cmd+Z)
+        if (cmd && !e.shiftKey && e.key.toLowerCase() === 'z') {
+          try {
+            const store = useStore.getState();
+            if (store && typeof store.undo === 'function') store.undo();
+          } catch (err) {
+            // ignore
+          }
+          e.preventDefault();
+          return;
+        }
+        // Redo (Ctrl/Cmd+Shift+Z)
+        if (cmd && e.shiftKey && e.key.toLowerCase() === 'z') {
+          try {
+            const store = useStore.getState();
+            if (store && typeof store.redo === 'function') store.redo();
+          } catch (err) {
+            // ignore
+          }
+          e.preventDefault();
+          return;
+        }
+
         // Copy (Ctrl/Cmd+C)
         if (cmd && e.key.toLowerCase() === 'c') {
           if (!reactFlowInstance) return;
