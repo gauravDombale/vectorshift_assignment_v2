@@ -331,13 +331,16 @@ export const PipelineUI = () => {
           const { nodes: copiedNodes, edges: copiedEdges } = copiedRef.current;
           const map = {};
           const offset = 40;
+          const createdIds = [];
           copiedNodes.forEach((n, idx) => {
             const newId = getNodeID(n.type || n.data?.nodeType || 'custom');
             map[n.id] = newId;
+            createdIds.push(newId);
             const newNode = {
-              ...n,
               id: newId,
+              type: n.type || n.data?.nodeType || 'custom',
               position: { x: (n.position?.x || 0) + offset * (idx + 1), y: (n.position?.y || 0) + offset * (idx + 1) },
+              data: { ...n.data },
             };
             addNode(newNode);
           });
@@ -346,6 +349,37 @@ export const PipelineUI = () => {
             const conn = { source: map[ed.source], target: map[ed.target], sourceHandle: ed.sourceHandle, targetHandle: ed.targetHandle };
             onConnect(conn);
           });
+
+          // Update selection: deselect originals, select new nodes only
+          try {
+            const store = useStore.getState();
+            const updated = store.nodes.map((nd) => {
+              if (copiedNodes.some(orig => orig.id === nd.id)) return { ...nd, selected: false };
+              if (createdIds.includes(nd.id)) return { ...nd, selected: true };
+              return nd;
+            });
+            useStore.setState({ nodes: updated });
+
+            // Also update React Flow's internal nodes and clear any active drag
+            setTimeout(() => {
+              try {
+                if (reactFlowInstance && typeof reactFlowInstance.setNodes === 'function') {
+                  const rfNodes = reactFlowInstance.getNodes().map((nd) => {
+                    if (copiedNodes.some(orig => orig.id === nd.id)) return { ...nd, selected: false };
+                    if (createdIds.includes(nd.id)) return { ...nd, selected: true };
+                    return { ...nd, selected: false };
+                  });
+                  reactFlowInstance.setNodes(rfNodes);
+                }
+                document.dispatchEvent(new MouseEvent('mouseup', { bubbles: true }));
+              } catch (err) {
+                // ignore
+              }
+            }, 10);
+          } catch (err) {
+            // ignore if selection update fails
+          }
+
           e.preventDefault();
         }
 
@@ -368,16 +402,54 @@ export const PipelineUI = () => {
           const selNodes = reactFlowInstance.getNodes().filter(n => n.selected);
           if (selNodes.length === 0) return;
           const map = {};
+          const createdIds = [];
           selNodes.forEach((n, idx) => {
             const newId = getNodeID(n.type || n.data?.nodeType || 'custom');
             map[n.id] = newId;
-            const newNode = { ...n, id: newId, position: { x: n.position.x + 20, y: n.position.y + 20 } };
+            createdIds.push(newId);
+            const newNode = {
+              id: newId,
+              type: n.type || n.data?.nodeType || 'custom',
+              position: { x: n.position.x + 20, y: n.position.y + 20 },
+              data: { ...n.data },
+            };
             addNode(newNode);
           });
           // duplicate internal edges
           const selIds = selNodes.map(n => n.id);
           const relatedEdges = edges.filter(ed => selIds.includes(ed.source) && selIds.includes(ed.target));
           relatedEdges.forEach(ed => onConnect({ source: map[ed.source], target: map[ed.target], sourceHandle: ed.sourceHandle, targetHandle: ed.targetHandle }));
+
+          // Update selection: deselect originals, select new nodes only
+          try {
+            const store = useStore.getState();
+            const updated = store.nodes.map((nd) => {
+              if (selIds.includes(nd.id)) return { ...nd, selected: false };
+              if (createdIds.includes(nd.id)) return { ...nd, selected: true };
+              return nd;
+            });
+            useStore.setState({ nodes: updated });
+
+            // Also update React Flow's internal nodes and clear any active drag
+            setTimeout(() => {
+              try {
+                if (reactFlowInstance && typeof reactFlowInstance.setNodes === 'function') {
+                  const rfNodes = reactFlowInstance.getNodes().map((nd) => {
+                    if (selIds.includes(nd.id)) return { ...nd, selected: false };
+                    if (createdIds.includes(nd.id)) return { ...nd, selected: true };
+                    return { ...nd, selected: false };
+                  });
+                  reactFlowInstance.setNodes(rfNodes);
+                }
+                document.dispatchEvent(new MouseEvent('mouseup', { bubbles: true }));
+              } catch (err) {
+                // ignore
+              }
+            }, 10);
+          } catch (err) {
+            // ignore
+          }
+
           e.preventDefault();
         }
       };
