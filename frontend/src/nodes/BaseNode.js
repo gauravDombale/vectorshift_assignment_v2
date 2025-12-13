@@ -8,6 +8,8 @@ import { theme } from '../styles/theme';
 import { useStore } from '../store';
 import useHandlePositions from '../hooks/useHandlePositions';
 
+// initial
+
 export const BaseNode = ({ 
   id, 
   data,
