@@ -50,13 +50,14 @@ export const PipelineUI = () => {
       edges,
       getNodeID,
       addNode,
-      onNodesChange,
+      onNodesChange: storeOnNodesChange,
       onEdgesChange,
       onConnect
     } = useStore(useShallow(selector));
     const removeNode = useStore((s) => s.removeNode);
 
     const [edgeButtons, setEdgeButtons] = useState([]);
+    const [alignGuides, setAlignGuides] = useState([]);
 
     const getInitNodeData = useCallback((nodeID, type) => {
       return { id: nodeID, nodeType: `${type}` };
@@ -491,7 +492,6 @@ export const PipelineUI = () => {
             <ReactFlow
                 nodes={nodes}
                 edges={edges}
-                onNodesChange={onNodesChange}
                 onEdgesChange={onEdgesChange}
                 onConnect={onConnect}
               onConnectStart={onConnectStart}
@@ -511,6 +511,83 @@ export const PipelineUI = () => {
                 onDrop={onDrop}
                 onDragOver={onDragOver}
                 onInit={setReactFlowInstance}
+                onNodeDragStop={() => { setAlignGuides([]); }}
+                onNodesChange={(changes) => {
+                  // forward to store
+                  try { storeOnNodesChange(changes); } catch (err) { }
+
+                  // compute alignment guides if a node position changed
+                  if (!reactFlowWrapper.current) return;
+                  const posChange = (changes || []).find(c => c.type === 'position');
+                  if (!posChange) return setAlignGuides([]);
+
+                  const movingId = posChange.id;
+                  const wrapperRect = reactFlowWrapper.current.getBoundingClientRect();
+
+                  const movingEl = reactFlowWrapper.current.querySelector(`[data-id="${movingId}"]`);
+                  if (!movingEl) return setAlignGuides([]);
+
+                  const movedRect = movingEl.getBoundingClientRect();
+                  const moved = {
+                    left: movedRect.left - wrapperRect.left,
+                    right: movedRect.right - wrapperRect.left,
+                    top: movedRect.top - wrapperRect.top,
+                    bottom: movedRect.bottom - wrapperRect.top,
+                    centerX: movedRect.left - wrapperRect.left + movedRect.width / 2,
+                    centerY: movedRect.top - wrapperRect.top + movedRect.height / 2,
+                  };
+
+                  const threshold = 8; // px tolerance
+                  const guides = [];
+
+                  // iterate other nodes
+                  const nodeEls = reactFlowWrapper.current.querySelectorAll('.react-flow__node');
+                  nodeEls.forEach((el) => {
+                    const id = el.getAttribute('data-id') || el.getAttribute('id') || el.dataset?.id;
+                    if (!id || id === movingId) return;
+                    const r = el.getBoundingClientRect();
+                    const other = {
+                      left: r.left - wrapperRect.left,
+                      right: r.right - wrapperRect.left,
+                      top: r.top - wrapperRect.top,
+                      bottom: r.bottom - wrapperRect.top,
+                      centerX: r.left - wrapperRect.left + r.width / 2,
+                      centerY: r.top - wrapperRect.top + r.height / 2,
+                    };
+
+                    // vertical align checks (left, center, right)
+                    const vChecks = [
+                      { a: moved.left, b: other.left },
+                      { a: moved.centerX, b: other.centerX },
+                      { a: moved.right, b: other.right },
+                    ];
+                    vChecks.forEach((c) => {
+                      if (Math.abs(c.a - c.b) <= threshold) {
+                        const x = Math.round((c.a + c.b) / 2);
+                        const from = Math.min(moved.top, other.top) - 8;
+                        const to = Math.max(moved.bottom, other.bottom) + 8;
+                        guides.push({ orientation: 'vertical', x, from, to });
+                      }
+                    });
+
+                    // horizontal align checks (top, center, bottom)
+                    const hChecks = [
+                      { a: moved.top, b: other.top },
+                      { a: moved.centerY, b: other.centerY },
+                      { a: moved.bottom, b: other.bottom },
+                    ];
+                    hChecks.forEach((c) => {
+                      if (Math.abs(c.a - c.b) <= threshold) {
+                        const y = Math.round((c.a + c.b) / 2);
+                        const from = Math.min(moved.left, other.left) - 8;
+                        const to = Math.max(moved.right, other.right) + 8;
+                        guides.push({ orientation: 'horizontal', y, from, to });
+                      }
+                    });
+                  });
+
+                  setAlignGuides(guides);
+                }}
                 nodeTypes={nodeTypes}
                 proOptions={proOptions}
                 snapGrid={[gridSize, gridSize]}
@@ -548,6 +625,14 @@ export const PipelineUI = () => {
                   zoomable
                   pannable
                 />
+                {/* alignment guide overlays */}
+                {alignGuides.map((g, idx) => (
+                  g.orientation === 'vertical' ? (
+                    <div key={`guide-v-${idx}`} style={{ position: 'absolute', left: `${g.x}px`, top: `${g.from}px`, height: `${g.to - g.from}px`, width: 1, background: 'rgba(67,56,202,0.9)', zIndex: 70 }} />
+                  ) : (
+                    <div key={`guide-h-${idx}`} style={{ position: 'absolute', top: `${g.y}px`, left: `${g.from}px`, width: `${g.to - g.from}px`, height: 1, background: 'rgba(67,56,202,0.9)', zIndex: 70 }} />
+                  )
+                ))}
                 
                 {/* edge hover handlers are attached at ReactFlow level via props below */}
             </ReactFlow>
