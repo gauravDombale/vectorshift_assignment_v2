@@ -64,6 +64,7 @@ export const SubmitButton = () => {
                     alignItems: 'center',
                     gap: '8px',
                     padding: '12px 24px',
+                    marginRight: '-19px',
                     fontSize: '14px',
                     fontWeight: '600',
                     fontFamily: theme.typography.fontFamily,
