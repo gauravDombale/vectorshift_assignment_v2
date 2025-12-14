@@ -1,17 +1,19 @@
 // submit.js
 
 import { Send } from 'lucide-react';
-import { theme } from './styles/theme';
+import { getTheme } from './styles/theme';
 import { useStore } from './store';
 import { useShallow } from 'zustand/react/shallow';
 
 export const SubmitButton = () => {
-    const { nodes, edges } = useStore(
+    const { nodes, edges, themeMode } = useStore(
         useShallow((state) => ({
             nodes: state.nodes,
             edges: state.edges,
+            themeMode: state.themeMode,
         }))
     );
+    const theme = getTheme(themeMode || 'light');
 
     const handleSubmit = async () => {
         try {

@@ -13,6 +13,68 @@ body {
   color: #1e293b;
 }
 
+/* Dark mode overrides when body has .dark */
+.dark body, body.dark {
+  background-color: #0f172a;
+  color: #e6eef8;
+}
+
+.dark .react-flow__controls-button {
+  background: #0b1220 !important;
+  border: 1px solid #1f2937 !important;
+}
+
+.dark .cancel-connection-button {
+  background: #0b1220;
+  border-color: rgba(255,255,255,0.06);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.6);
+}
+
+.dark .react-flow__edge-path {
+  stroke: #374151;
+}
+
+/* Dark-mode canvas and React Flow control visibility */
+.dark .react-flow {
+  background-color: #0f172a !important;
+}
+
+.dark .react-flow__pane {
+  background-color: transparent !important;
+}
+
+/* Make the background dots slightly visible on dark canvas */
+.dark .react-flow__background svg circle {
+  fill: rgba(230,238,248,0.06) !important;
+}
+
+/* Controls (zoom/pan) styling for dark mode — ensure icons are visible */
+.dark .react-flow__controls-button {
+  background: #0b1220 !important;
+  border: 1px solid #374151 !important;
+  color: #e6eef8 !important;
+}
+
+.dark .react-flow__controls-button svg {
+  stroke: currentColor !important;
+  fill: none !important;
+}
+
+.dark .react-flow__controls-button:hover {
+  background: #111827 !important;
+}
+
+/* Make mini map and floating buttons match dark theme */
+.dark .react-flow__minimap {
+  background: #071026 !important;
+  border: 1px solid #1f2937 !important;
+}
+.dark .cancel-connection-button {
+  background: #0b1220;
+  border-color: rgba(255,255,255,0.06);
+  color: #e6eef8;
+}
+
 code {
   font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
     monospace;

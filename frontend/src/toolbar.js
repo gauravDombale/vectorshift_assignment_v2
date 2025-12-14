@@ -1,9 +1,14 @@
 // toolbar.js
 
 import { DraggableNode } from './draggableNode';
-import { theme } from './styles/theme';
+import { getTheme } from './styles/theme';
+import { useStore } from './store';
+import { useShallow } from 'zustand/react/shallow';
 
 export const PipelineToolbar = () => {
+
+    const { themeMode } = useStore(useShallow((s) => ({ themeMode: s.themeMode })));
+    const theme = getTheme(themeMode || 'light');
 
     return (
         <div style={{ 

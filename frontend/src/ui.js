@@ -6,6 +6,7 @@ import { useState, useRef, useCallback, useEffect } from 'react';
 import ReactFlow, { Controls, Background, MiniMap } from 'reactflow';
 import { useStore } from './store';
 import { useShallow } from 'zustand/react/shallow';
+import { getTheme } from './styles/theme';
 import { InputNode } from './nodes/inputNode';
 import { LLMNode } from './nodes/llmNode';
 import { OutputNode } from './nodes/outputNode';
@@ -55,6 +56,8 @@ export const PipelineUI = () => {
       onConnect
     } = useStore(useShallow(selector));
     const removeNode = useStore((s) => s.removeNode);
+    const themeMode = useStore((s) => s.themeMode);
+    const theme = getTheme(themeMode || 'light');
 
     const [edgeButtons, setEdgeButtons] = useState([]);
     const [alignGuides, setAlignGuides] = useState([]);
@@ -673,18 +676,30 @@ export const PipelineUI = () => {
                 );
               })()
             )}
-            {edgeButtons.map((b) => (
-              <button
-                key={`edge-btn-${b.id}`}
-                aria-label="Delete edge"
-                title="Delete edge"
-                onClick={() => removeEdge(b.id)}
-                className="cancel-connection-button"
-                style={{ left: `${b.left - 14}px`, top: `${b.top - 14}px`, position: 'absolute', background: '#fff0f0', borderColor: '#fca5a5' }}
-              >
-                ✕
-              </button>
-            ))}
+            {edgeButtons.map((b) => {
+              const edgeBtnStyle = {
+                left: `${b.left - 14}px`,
+                top: `${b.top - 14}px`,
+                position: 'absolute',
+                // theme-aware colors so the cross stays visible in dark mode
+                background: themeMode === 'dark' ? '#0b1220' : '#fff0f0',
+                borderColor: themeMode === 'dark' ? 'rgba(255,255,255,0.06)' : '#fca5a5',
+                color: themeMode === 'dark' ? theme.colors.textLight : '#7a1616',
+              };
+
+              return (
+                <button
+                  key={`edge-btn-${b.id}`}
+                  aria-label="Delete edge"
+                  title="Delete edge"
+                  onClick={() => removeEdge(b.id)}
+                  className="cancel-connection-button"
+                  style={edgeBtnStyle}
+                >
+                  ✕
+                </button>
+              );
+            })}
         </div>
         </>
     )

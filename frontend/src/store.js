@@ -16,6 +16,13 @@ export const useStore = create((set, get) => ({
   _redo: [],
   _historyMax: 50,
     nodeIDs: {},
+    // theme mode: 'light' | 'dark'
+    themeMode: 'light',
+    toggleTheme: () => {
+      const current = get().themeMode || 'light';
+      const next = current === 'light' ? 'dark' : 'light';
+      set({ themeMode: next });
+    },
     getNodeID: (type) => {
         const newIDs = {...(get().nodeIDs || {})};
         if (newIDs[type] === undefined) {

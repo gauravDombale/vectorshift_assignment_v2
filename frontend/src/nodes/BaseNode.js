@@ -4,8 +4,9 @@
 import { useState, useRef, useEffect } from 'react';
 import { Handle, Position } from 'reactflow';
 import { nodeStyles } from '../styles/nodeStyles';
-import { theme } from '../styles/theme';
+import { getTheme } from '../styles/theme';
 import { useStore } from '../store';
+import { useShallow } from 'zustand/react/shallow';
 import useHandlePositions from '../hooks/useHandlePositions';
 
 // initial
@@ -40,6 +41,8 @@ export const BaseNode = ({
   const updateNodeField = useStore((state) => state.updateNodeField);
   const updateNodeDimensions = useStore((state) => state.updateNodeDimensions);
   const removeNode = useStore((state) => state.removeNode);
+  const { themeMode } = useStore(useShallow((s) => ({ themeMode: s.themeMode })));
+  const theme = getTheme(themeMode || 'light');
 
   // Update editedTitle when data.customName changes
   useEffect(() => {

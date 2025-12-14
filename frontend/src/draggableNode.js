@@ -5,7 +5,9 @@ import {
   Upload, Download, Bot, Type, GitBranch, 
   Wand2, Filter, Merge, Split 
 } from 'lucide-react';
-import { theme } from './styles/theme';
+import { getTheme } from './styles/theme';
+import { useStore } from './store';
+import { useShallow } from 'zustand/react/shallow';
 
 const nodeIcons = {
   customInput: Upload,
@@ -22,6 +24,8 @@ const nodeIcons = {
 export const DraggableNode = ({ type, label }) => {
     const [isHovered, setIsHovered] = useState(false);
     const Icon = nodeIcons[type];
+  const { themeMode } = useStore(useShallow((s) => ({ themeMode: s.themeMode })));
+  const theme = getTheme(themeMode || 'light');
 
     const onDragStart = (event, nodeType) => {
       const appData = { nodeType }
